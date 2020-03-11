@@ -388,6 +388,30 @@ def test_cdtg():
         sample_coverage(obj)
 
     assert coverage.coverage_db["top.cdtg_coverage"].coverage == 10 #expect all covered in 10 steps
-        
-        
 
+
+def test_solve_order2():
+    
+    class RandTrxn(crv.Randomized):
+        def __init__(self):
+            crv.Randomized.__init__(self)
+            self.dac_override = 0
+            self.dac_override_en = 0
+
+            self.add_rand("dac_override", list(range(512)))
+            self.add_rand("dac_override_en", list(range(2)))
+        
+            self.add_constraint(lambda dac_override_en: dac_override_en == 0)
+            def c_override(dac_override,dac_override_en):
+                if dac_override_en == 1:
+                    dac_override > 0
+                else:
+                    dac_override == 0
+            self.add_constraint(c_override)
+
+            self.solve_order("dac_override_en", "c_override")
+
+    test = RandTrxn()
+    test.randomize()
+
+    assert test.dac_override == 0
